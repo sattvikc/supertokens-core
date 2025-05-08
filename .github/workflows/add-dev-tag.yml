@@ -83,11 +83,6 @@ jobs:
         run: |
           git config --global user.name "Supertokens Bot"
           git config --global user.email <>"
-      - name: Add dev tag to core
-        run: |
-          echo "Adding dev tag to core"
-          cd supertokens-root/supertokens-core
-          ./addDevTag
       - name: Add dev tag to plugin interface
         if: ${{ github.event.inputs.new-release-for-plugin-interface == 'true' }}
         run: |
@@ -100,3 +95,9 @@ jobs:
           echo "Adding dev tag to postgres plugin"
           cd supertokens-root/supertokens-postgresql-plugin
           ./addDevTag
+      - name: Add dev tag to core
+        run: |
+          echo "Adding dev tag to core"
+          cd supertokens-root/supertokens-core
+          ./addDevTag
+  
