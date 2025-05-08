@@ -68,3 +68,25 @@ jobs:
           repository: supertokens/supertokens-postgresql-plugin
           path: ./supertokens-root/supertokens-postgresql-plugin
           ref: ${{ fromJson(needs.dependency-branches.outputs.branches)['postgresql'] }}
+      - name: Load Modules
+        run: |
+          cd supertokens-root
+          echo "core,master
+          plugin-interface,master
+          postgresql-plugin,master
+          " > modules.txt
+          cat modules.txt
+          ./loadModules
+      - name: Setup test env
+        run: cd supertokens-root && ./utils/setupTestEnv --local
+      - name: Add dev tag to core
+        run: |
+          echo "Adding dev tag to core"
+      - name: Add dev tag to plugin interface
+        if: ${{ github.event.inputs.new-release-for-plugin-interface == 'true' }}
+        run: |
+          echo "Adding dev tag to plugin interface"
+      - name: Add dev tag to postgres plugin
+        if: ${{ github.event.inputs.new-release-for-postgresql-plugin == 'true' }}
+        run: |
+          echo "Adding dev tag to postgres plugin"
