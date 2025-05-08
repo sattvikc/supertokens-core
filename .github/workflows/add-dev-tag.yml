@@ -38,7 +38,7 @@ jobs:
           run-for: add-dev-tag
           core-version: ${{ github.event.inputs.core-version }}
           plugin-interface-version: ${{ github.event.inputs.plugin-interface-version }}
-          postgres-plugin-version: ${{ github.event.inputs.postgres-plugin-version }}
+          postgresql-plugin-version: ${{ github.event.inputs.postgres-plugin-version }}
   add-dev-tag:
     runs-on: ubuntu-latest
     steps:
