@@ -82,7 +82,7 @@ jobs:
       - name: Git config
         run: |
           git config --global user.name "Supertokens Bot"
-          git config --global user.email <>"
+          git config --global user.email "<>"
       - name: Add dev tag to plugin interface
         if: ${{ github.event.inputs.new-release-for-plugin-interface == 'true' }}
         run: |
