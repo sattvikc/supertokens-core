@@ -94,16 +94,18 @@ jobs:
         run: |
           echo "Adding dev tag to plugin interface"
           cd supertokens-root/supertokens-plugin-interface
+          git remote set-url origin https://sattvikc:${{ secrets.GH_TOKEN }}@github.com/supertokens/supertokens-plugin-interface.git
           ./addDevTag
       - name: Add dev tag to postgres plugin
         if: ${{ github.event.inputs.new-release-for-postgresql-plugin == 'true' }}
         run: |
           echo "Adding dev tag to postgres plugin"
           cd supertokens-root/supertokens-postgresql-plugin
+          git remote set-url origin https://sattvikc:${{ secrets.GH_TOKEN }}@github.com/supertokens/supertokens-postgresql-plugin.git
           ./addDevTag
       - name: Add dev tag to core
         run: |
           echo "Adding dev tag to core"
           cd supertokens-root/supertokens-core
+          git remote set-url origin https://sattvikc:${{ secrets.GH_TOKEN }}@github.com/supertokens/supertokens-core.git
           ./addDevTag
-  
