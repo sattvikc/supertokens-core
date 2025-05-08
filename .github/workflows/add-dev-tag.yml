@@ -15,7 +15,7 @@ on:
         description: 'New release for plugin interface'
         required: true
         type: boolean
-      postgres-plugin-version:
+      postgresql-plugin-version:
         description: 'Postgres plugin version'
         required: true
       new-release-for-postgres-plugin:
@@ -38,7 +38,7 @@ jobs:
           run-for: add-dev-tag
           core-version: ${{ github.event.inputs.core-version }}
           plugin-interface-version: ${{ github.event.inputs.plugin-interface-version }}
-          postgresql-plugin-version: ${{ github.event.inputs.postgres-plugin-version }}
+          postgresql-plugin-version: ${{ github.event.inputs.postgresql-plugin-version }}
   add-dev-tag:
     runs-on: ubuntu-latest
     steps:
