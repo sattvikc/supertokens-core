@@ -54,6 +54,7 @@ jobs:
           ref: feat/java_gradle_upgrade
       - uses: actions/checkout@v2
         with:
+          repository: supertokens/supertokens-core
           path: ./supertokens-root/supertokens-core
           ref: ${{ fromJson(needs.dependency-branches.outputs.branches)['core'] }}
       - uses: actions/checkout@v2
