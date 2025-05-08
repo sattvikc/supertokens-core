@@ -18,7 +18,7 @@ on:
       postgresql-plugin-version:
         description: 'Postgres plugin version'
         required: true
-      new-release-for-postgres-plugin:
+      new-release-for-postgresql-plugin:
         description: 'New release for postgres plugin'
         required: true
         type: boolean
