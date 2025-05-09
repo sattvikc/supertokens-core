@@ -77,13 +77,13 @@ jobs:
           docker tag supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$minor
           docker tag supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$tag
 
-          docker push supertokens/supertokens-postgresql:$major
-          docker push supertokens/supertokens-postgresql:$minor
-          docker push supertokens/supertokens-postgresql:$tag
+          docker push --platform linux/${{ matrix.platform }} supertokens/supertokens-postgresql:$major
+          docker push --platform linux/${{ matrix.platform }} supertokens/supertokens-postgresql:$minor
+          docker push --platform linux/${{ matrix.platform }} supertokens/supertokens-postgresql:$tag
 
           if [ "${{ github.event.inputs.is-latest-release }}" == "true" ]; then
             docker tag supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:latest
-            docker push supertokens/supertokens-postgresql:latest
+            docker push --platform linux/${{ matrix.platform }} supertokens/supertokens-postgresql:latest
           fi
   add-release-tag:
     runs-on: ubuntu-latest
@@ -121,6 +121,7 @@ jobs:
         run: |
           cd supertokens-root
           echo "${{ secrets.SUPERTOKENS_API_KEY }}" > releasePassword
+          echo "${{ secrets.SUPERTOKENS_API_KEY }}" > apiPassword
       - name: Load Modules
         run: |
           cd supertokens-root
