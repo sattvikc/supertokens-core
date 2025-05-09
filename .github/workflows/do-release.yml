@@ -73,16 +73,16 @@ jobs:
           major=$(echo $tag | cut -d. -f1)
           minor=$(echo $tag | cut -d. -f1,2)
 
-          docker tag supertokens/supertokens-dev-postgresql:$tag supertokens/supertokens-postgresql:$major
-          docker tag supertokens/supertokens-dev-postgresql:$tag supertokens/supertokens-postgresql:$minor
-          docker tag supertokens/supertokens-dev-postgresql:$tag supertokens/supertokens-postgresql:$tag
+          docker tag supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$major
+          docker tag supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$minor
+          docker tag supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$tag
 
           docker push supertokens/supertokens-postgresql:$major
           docker push supertokens/supertokens-postgresql:$minor
           docker push supertokens/supertokens-postgresql:$tag
 
           if [ "${{ github.event.inputs.is-latest-release }}" == "true" ]; then
-            docker tag supertokens/supertokens-dev-postgresql:$tag supertokens/supertokens-postgresql:latest
+            docker tag supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:latest
             docker push supertokens/supertokens-postgresql:latest
           fi
   add-release-tag:
