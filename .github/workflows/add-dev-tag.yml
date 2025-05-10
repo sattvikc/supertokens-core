@@ -52,7 +52,7 @@ jobs:
         with:
           repository: supertokens/supertokens-root
           path: ./supertokens-root
-          ref: master
+          ref: dev-tag-deletion-before-add
       - name: Checkout supertokens-core
         run: |
           cd supertokens-root
