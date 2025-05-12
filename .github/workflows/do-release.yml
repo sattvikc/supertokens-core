@@ -67,12 +67,12 @@ jobs:
           major=$(echo $tag | cut -d. -f1)
           minor=$(echo $tag | cut -d. -f1,2)
 
-          bash .github/helper/release-docker.sh supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$major
-          bash .github/helper/release-docker.sh supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$minor
-          bash .github/helper/release-docker.sh supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$tag
+          bash .github/helpers/release-docker.sh supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$major
+          bash .github/helpers/release-docker.sh supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$minor
+          bash .github/helpers/release-docker.sh supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:$tag
 
           if [ "${{ github.event.inputs.is-latest-release }}" == "true" ]; then
-            bash .github/helper/release-docker.sh supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:latest
+            bash .github/helpers/release-docker.sh supertokens/supertokens-dev-postgresql:$minor supertokens/supertokens-postgresql:latest
           fi
   add-release-tag:
     runs-on: ubuntu-latest
@@ -87,7 +87,7 @@ jobs:
         with:
           repository: supertokens/supertokens-root
           path: ./supertokens-root
-          ref: master
+          ref: dev-tag-deletion-before-add
       - name: Checkout supertokens-core
         run: |
           cd supertokens-root
@@ -126,22 +126,20 @@ jobs:
         run: |
           git config --global user.name "Supertokens Bot"
           git config --global user.email "<>"
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-      - name: Add dev tag to plugin interface
+      - name: Add release tag to plugin interface
         if: ${{ github.event.inputs.new-release-for-plugin-interface == 'true' }}
         run: |
-          echo "Adding dev tag to plugin interface"
+          echo "Adding release tag to plugin interface"
           cd supertokens-root/supertokens-plugin-interface
           ./addReleaseTag
-      - name: Add dev tag to postgres plugin
+      - name: Add release tag to postgres plugin
         if: ${{ github.event.inputs.new-release-for-postgresql-plugin == 'true' }}
         run: |
-          echo "Adding dev tag to postgres plugin"
+          echo "Adding release tag to postgres plugin"
           cd supertokens-root/supertokens-postgresql-plugin
           ./addReleaseTag
-      - name: Add dev tag to core
+      - name: Add release tag to core
         run: |
-          echo "Adding dev tag to core"
+          echo "Adding release tag to core"
           cd supertokens-root/supertokens-core
           ./addReleaseTag
