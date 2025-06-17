@@ -74,7 +74,36 @@ jobs:
 
       - name: Add to Action Summary
         run: |
-          echo "${{ steps.security-summary.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`supertokens/supertokens-postgresql:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan Date:** \`$(date -u)\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Get the scan report path from the container scan output
+          SCAN_REPORT_PATH="${{ steps.container-scan.outputs.scan-report-path }}"
+          
+          if [ -f "$SCAN_REPORT_PATH" ]; then
+            # Count vulnerabilities by severity using the correct JSON structure
+            critical=$(jq '[.vulnerabilities[]? | select(.severity == "CRITICAL")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            high=$(jq '[.vulnerabilities[]? | select(.severity == "HIGH")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            medium=$(jq '[.vulnerabilities[]? | select(.severity == "MEDIUM")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            low=$(jq '[.vulnerabilities[]? | select(.severity == "LOW")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            
+            total_vulns=$(jq '[.vulnerabilities[]?] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            
+            echo "**Total Vulnerabilities:** $total_vulns" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            echo "- **Critical**: $critical" >> $GITHUB_STEP_SUMMARY
+            echo "- **High**: $high" >> $GITHUB_STEP_SUMMARY
+            echo "- **Medium**: $medium" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Scan results not found or scan failed**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[📃 Download the full report](${{ steps.upload-scan-results.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
 
       - name: Post notification on Slack channel
         id: deployment_message
