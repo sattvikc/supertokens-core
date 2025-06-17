@@ -87,12 +87,11 @@ jobs:
       - name: Attach the report
         uses: slackapi/slack-github-action@v2.1.0
         with:
-          method: files.uploadV2
+          method: files.upload
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
             thread_ts: "${{ steps.deployment_message.outputs.ts }}"
             initial_comment: "Container Scan Results"
-            file_uploads:
-            - file: ${{ steps.container-scan.outputs.scan-report-path }}
-              filename: "container-scan-results.json"
+            file: ${{ steps.container-scan.outputs.scan-report-path }}
+            filename: "container-scan-results.json"
