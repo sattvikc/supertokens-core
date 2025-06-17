@@ -15,6 +15,7 @@ jobs:
     
     steps:
       - name: Run Azure Container Scan
+        id: container-scan
         uses: Azure/container-scan@v0
         with:
           image-name: supertokens/supertokens-postgresql:latest
@@ -33,16 +34,23 @@ jobs:
           echo "**Scan Date:** $(date -u)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          # Check if scan results exist and display them
-          if [ -f "anchore-reports/vulnerabilities.json" ]; then
+          # Get the scan report path from the container scan output
+          SCAN_REPORT_PATH="${{ steps.container-scan.outputs.scan-report-path }}"
+          
+          if [ -f "$SCAN_REPORT_PATH" ]; then
             echo "### Vulnerabilities Found" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             
-            # Count vulnerabilities by severity
-            critical=$(jq '[.vulnerabilities[] | select(.severity == "Critical")] | length' anchore-reports/vulnerabilities.json 2>/dev/null || echo "0")
-            high=$(jq '[.vulnerabilities[] | select(.severity == "High")] | length' anchore-reports/vulnerabilities.json 2>/dev/null || echo "0")
-            medium=$(jq '[.vulnerabilities[] | select(.severity == "Medium")] | length' anchore-reports/vulnerabilities.json 2>/dev/null || echo "0")
-            low=$(jq '[.vulnerabilities[] | select(.severity == "Low")] | length' anchore-reports/vulnerabilities.json 2>/dev/null || echo "0")
+            # Count vulnerabilities by severity using the correct JSON structure
+            critical=$(jq '[.vulnerabilities[]? | select(.severity == "CRITICAL")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            high=$(jq '[.vulnerabilities[]? | select(.severity == "HIGH")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            medium=$(jq '[.vulnerabilities[]? | select(.severity == "MEDIUM")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            low=$(jq '[.vulnerabilities[]? | select(.severity == "LOW")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            
+            total_vulns=$(jq '[.vulnerabilities[]?] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            
+            echo "**Total Vulnerabilities:** $total_vulns" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
             
             echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
             echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
@@ -52,14 +60,27 @@ jobs:
             echo "| Low | $low |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             
-            # List critical and high vulnerabilities
+            # List critical and high vulnerabilities with proper field names
             if [ "$critical" -gt 0 ] || [ "$high" -gt 0 ]; then
               echo "### Critical and High Severity CVEs" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
-              jq -r '.vulnerabilities[] | select(.severity == "Critical" or .severity == "High") | "- **\(.vuln)** (\(.severity)): \(.package) - \(.description // "No description available")"' anchore-reports/vulnerabilities.json 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "No critical or high severity vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+              jq -r '.vulnerabilities[]? | select(.severity == "CRITICAL" or .severity == "HIGH") | "- **\(.vulnerabilityId // .id // "Unknown")** (\(.severity)): \(.packageName // .package // "Unknown package") - \(.description // "No description available")"' "$SCAN_REPORT_PATH" 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "No critical or high severity vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
             fi
+            
+            # Show best practice violations if any
+            best_practice_count=$(jq '[.bestPracticeViolations[]?] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
+            if [ "$best_practice_count" -gt 0 ]; then
+              echo "### Best Practice Violations ($best_practice_count)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              jq -r '.bestPracticeViolations[]? | "- **\(.code // "Unknown")**: \(.title // "No title") (\(.level // "Unknown level"))"' "$SCAN_REPORT_PATH" 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "Failed to parse best practice violations" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            echo "📄 **Full report available in artifacts**" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Scan results not found or scan failed**" >> $GITHUB_STEP_SUMMARY
+            echo "Expected report path: $SCAN_REPORT_PATH" >> $GITHUB_STEP_SUMMARY
           fi
       
       - name: Upload scan results
@@ -68,6 +89,5 @@ jobs:
         with:
           name: container-scan-results
           path: |
-            **/scan-report-*.json
-            **/vulnerability-report-*.json
+            ${{ steps.container-scan.outputs.scan-report-path }}
           retention-days: 30
