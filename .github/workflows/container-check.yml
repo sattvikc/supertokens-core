@@ -30,19 +30,14 @@ jobs:
         run: |
           echo "summary<<EOF" >> $GITHUB_OUTPUT
 
-          echo "## Container Security Scan Results\n" >> $GITHUB_OUTPUT
-          echo "\n" >> $GITHUB_OUTPUT
-          echo "**Image:** supertokens/supertokens-postgresql:latest\n" >> $GITHUB_OUTPUT
-          echo "**Scan Date:** $(date -u)\n" >> $GITHUB_OUTPUT
+          echo "**Image:** \`supertokens/supertokens-postgresql:latest\`\n" >> $GITHUB_OUTPUT
+          echo "**Scan Date:** \`$(date -u)\`\n" >> $GITHUB_OUTPUT
           echo "\n" >> $GITHUB_OUTPUT
 
           # Get the scan report path from the container scan output
           SCAN_REPORT_PATH="${{ steps.container-scan.outputs.scan-report-path }}"
           
           if [ -f "$SCAN_REPORT_PATH" ]; then
-            echo "### Vulnerabilities Found\n" >> $GITHUB_OUTPUT
-            echo "\n" >> $GITHUB_OUTPUT
-            
             # Count vulnerabilities by severity using the correct JSON structure
             critical=$(jq '[.vulnerabilities[]? | select(.severity == "CRITICAL")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
             high=$(jq '[.vulnerabilities[]? | select(.severity == "HIGH")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
