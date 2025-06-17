@@ -26,6 +26,7 @@ jobs:
           DOCKER_CONTENT_TRUST: 1
       
       - name: Generate Security Summary
+        id: security-summary
         if: always()
         run: |
           echo "## Container Security Scan Results" >> $GITHUB_STEP_SUMMARY
@@ -82,6 +83,11 @@ jobs:
             echo "❌ **Scan results not found or scan failed**" >> $GITHUB_STEP_SUMMARY
             echo "Expected report path: $SCAN_REPORT_PATH" >> $GITHUB_STEP_SUMMARY
           fi
+
+          # Set the summary content as a step output
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          cat $GITHUB_STEP_SUMMARY >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       
       - name: Upload scan results
         uses: actions/upload-artifact@v4
@@ -91,3 +97,26 @@ jobs:
           path: |
             ${{ steps.container-scan.outputs.scan-report-path }}
           retention-days: 30
+
+      - name: Post notification on Slack channel
+        id: deployment_message
+        uses: slackapi/slack-github-action@v2.1.0
+        if: always()
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            text:
+              type: "mrkdwn"
+              text: "${{ steps.security-summary.outputs.summary }}"
+      - name: Attach the report
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          method: files.uploadV2
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ steps.deployment_message.outputs.ts }}"
+            file: ${{ steps.container-scan.outputs.scan-report-path }}
+            filename: "container-scan-results.json"
