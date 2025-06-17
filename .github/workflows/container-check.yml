@@ -108,6 +108,11 @@ jobs:
           payload: |
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
             text: ${{ steps.container-scan.outcome == 'success' && '✅' || '❌' }} Vulnerability Report: ${{ steps.container-scan.outcome == 'success' && 'All okay' || 'Needs attention' }}
+            blocks:
+              - type: "section"
+                text:
+                  type: "plain_text"
+                  text: ${{ steps.container-scan.outcome == 'success' && '✅' || '❌' }} Vulnerability Report: ${{ steps.container-scan.outcome == 'success' && 'All okay' || 'Needs attention' }}
 
       - name: Attach the report
         uses: slackapi/slack-github-action@v2.1.0
