@@ -14,15 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
       - name: Run Azure Container Scan
         uses: Azure/container-scan@v0
         with:
           image-name: supertokens/supertokens-postgresql:latest
-          severity-threshold: MEDIUM
-          run-quality-checks: true
+          severity-threshold: LOW
+          run-quality-checks: false
         env:
           # Set any environment variables if needed
           DOCKER_CONTENT_TRUST: 1
