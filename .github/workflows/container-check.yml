@@ -52,7 +52,6 @@ jobs:
             echo "- **Critical**: $critical\n" >> $GITHUB_OUTPUT
             echo "- **High**: $high\n" >> $GITHUB_OUTPUT
             echo "- **Medium**: $medium\n" >> $GITHUB_OUTPUT
-            echo "- **Low**: $low\n" >> $GITHUB_OUTPUT
             echo "\n" >> $GITHUB_OUTPUT
           else
             echo "❌ **Scan results not found or scan failed**" >> $GITHUB_OUTPUT
@@ -94,5 +93,6 @@ jobs:
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
             thread_ts: "${{ steps.deployment_message.outputs.ts }}"
             initial_comment: "Container Scan Results"
-            file: ${{ steps.container-scan.outputs.scan-report-path }}
-            filename: "container-scan-results.json"
+            file_uploads:
+            - file: ${{ steps.container-scan.outputs.scan-report-path }}
+              filename: "container-scan-results.json"
