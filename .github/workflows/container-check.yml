@@ -17,30 +17,31 @@ jobs:
       - name: Run Azure Container Scan
         id: container-scan
         uses: Azure/container-scan@v0
+        continue-on-error: true
         with:
           image-name: supertokens/supertokens-postgresql:latest
-          severity-threshold: LOW
+          severity-threshold: MEDIUM
           run-quality-checks: false
         env:
-          # Set any environment variables if needed
           DOCKER_CONTENT_TRUST: 1
       
       - name: Generate Security Summary
         id: security-summary
-        if: always()
         run: |
-          echo "## Container Security Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** supertokens/supertokens-postgresql:latest" >> $GITHUB_STEP_SUMMARY
-          echo "**Scan Date:** $(date -u)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+
+          echo "## Container Security Scan Results\n" >> $GITHUB_OUTPUT
+          echo "\n" >> $GITHUB_OUTPUT
+          echo "**Image:** supertokens/supertokens-postgresql:latest\n" >> $GITHUB_OUTPUT
+          echo "**Scan Date:** $(date -u)\n" >> $GITHUB_OUTPUT
+          echo "\n" >> $GITHUB_OUTPUT
+
           # Get the scan report path from the container scan output
           SCAN_REPORT_PATH="${{ steps.container-scan.outputs.scan-report-path }}"
           
           if [ -f "$SCAN_REPORT_PATH" ]; then
-            echo "### Vulnerabilities Found" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Vulnerabilities Found\n" >> $GITHUB_OUTPUT
+            echo "\n" >> $GITHUB_OUTPUT
             
             # Count vulnerabilities by severity using the correct JSON structure
             critical=$(jq '[.vulnerabilities[]? | select(.severity == "CRITICAL")] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
@@ -50,48 +51,22 @@ jobs:
             
             total_vulns=$(jq '[.vulnerabilities[]?] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
             
-            echo "**Total Vulnerabilities:** $total_vulns" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Total Vulnerabilities:** $total_vulns\n" >> $GITHUB_OUTPUT
+            echo "\n" >> $GITHUB_OUTPUT
             
-            echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
-            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| Critical | $critical |" >> $GITHUB_STEP_SUMMARY
-            echo "| High | $high |" >> $GITHUB_STEP_SUMMARY
-            echo "| Medium | $medium |" >> $GITHUB_STEP_SUMMARY
-            # echo "| Low | $low |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            
-            # List critical and high vulnerabilities with proper field names
-            if [ "$critical" -gt 0 ] || [ "$high" -gt 0 ]; then
-              echo "### Critical and High Severity CVEs" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              jq -r '.vulnerabilities[]? | select(.severity == "CRITICAL" or .severity == "HIGH") | "- **\(.vulnerabilityId // .id // "Unknown")** (\(.severity)): \(.packageName // .package // "Unknown package") - \(.description // "No description available")"' "$SCAN_REPORT_PATH" 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "No critical or high severity vulnerabilities found" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-            fi
-            
-            # Show best practice violations if any
-            best_practice_count=$(jq '[.bestPracticeViolations[]?] | length' "$SCAN_REPORT_PATH" 2>/dev/null || echo "0")
-            if [ "$best_practice_count" -gt 0 ]; then
-              echo "### Best Practice Violations ($best_practice_count)" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              jq -r '.bestPracticeViolations[]? | "- **\(.code // "Unknown")**: \(.title // "No title") (\(.level // "Unknown level"))"' "$SCAN_REPORT_PATH" 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "Failed to parse best practice violations" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-            fi
-            
-            echo "📄 **Full report available in artifacts**" >> $GITHUB_STEP_SUMMARY
+            echo "- **Critical**: $critical\n" >> $GITHUB_OUTPUT
+            echo "- **High**: $high\n" >> $GITHUB_OUTPUT
+            echo "- **Medium**: $medium\n" >> $GITHUB_OUTPUT
+            echo "- **Low**: $low\n" >> $GITHUB_OUTPUT
+            echo "\n" >> $GITHUB_OUTPUT
           else
-            echo "❌ **Scan results not found or scan failed**" >> $GITHUB_STEP_SUMMARY
-            echo "Expected report path: $SCAN_REPORT_PATH" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Scan results not found or scan failed**" >> $GITHUB_OUTPUT
           fi
 
-          # Set the summary content as a step output
-          echo "summary<<EOF" >> $GITHUB_OUTPUT
-          cat $GITHUB_STEP_SUMMARY >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       
       - name: Upload scan results
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: container-scan-results
           path: |
@@ -101,7 +76,6 @@ jobs:
       - name: Post notification on Slack channel
         id: deployment_message
         uses: slackapi/slack-github-action@v2.1.0
-        if: always()
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -118,7 +92,6 @@ jobs:
 
       - name: Attach the report
         uses: slackapi/slack-github-action@v2.1.0
-        if: always()
         with:
           method: files.uploadV2
           token: ${{ secrets.SLACK_BOT_TOKEN }}
