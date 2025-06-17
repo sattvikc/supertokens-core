@@ -98,6 +98,16 @@ jobs:
             echo "- **High**: $high" >> $GITHUB_STEP_SUMMARY
             echo "- **Medium**: $medium" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "**Vulnerabilities:**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| ID | Severity | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|----|----------|-------------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Extract and format vulnerabilities into a table
+          jq -r '.vulnerabilities[] | "| \(.vulnerabilityId) | \(.severity) | \(.description | gsub("\n"; " ")) |"' "$SCAN_REPORT_PATH" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Scan results not found or scan failed**" >> $GITHUB_STEP_SUMMARY
           fi
