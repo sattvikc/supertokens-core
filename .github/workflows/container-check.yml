@@ -68,9 +68,13 @@ jobs:
 
           echo "\n" >> $GITHUB_OUTPUT
 
-          echo "[Download the full report](${{ steps.upload-scan-results.outputs.artifact-url }})\n" >> $GITHUB_OUTPUT
+          echo "[📃 Download the full report](${{ steps.upload-scan-results.outputs.artifact-url }})\n" >> $GITHUB_OUTPUT
 
           echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Add to Action Summary
+        run: |
+          echo "${{ steps.security-summary.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Post notification on Slack channel
         id: deployment_message
