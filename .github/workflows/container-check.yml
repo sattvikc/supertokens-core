@@ -20,7 +20,7 @@ jobs:
         continue-on-error: true
         with:
           image-name: supertokens/supertokens-postgresql:latest
-          severity-threshold: MEDIUM
+          severity-threshold: LOW
           run-quality-checks: false
         env:
           DOCKER_CONTENT_TRUST: 1
@@ -58,9 +58,10 @@ jobs:
             echo "**Total Vulnerabilities:** $total_vulns\n" >> $GITHUB_OUTPUT
             echo "\n" >> $GITHUB_OUTPUT
             
-            echo "- **Critical**: $critical\n" >> $GITHUB_OUTPUT
-            echo "- **High**: $high\n" >> $GITHUB_OUTPUT
-            echo "- **Medium**: $medium\n" >> $GITHUB_OUTPUT
+            echo "- 🔴 **Critical**: $critical\n" >> $GITHUB_OUTPUT
+            echo "- 🟠 **High**: $high\n" >> $GITHUB_OUTPUT
+            echo "- 🟡 **Medium**: $medium\n" >> $GITHUB_OUTPUT
+            echo "- 🟢 **Low**: $low\n" >> $GITHUB_OUTPUT
             echo "\n" >> $GITHUB_OUTPUT
           else
             echo "❌ **Scan results not found or scan failed**" >> $GITHUB_OUTPUT
@@ -94,19 +95,19 @@ jobs:
             echo "**Total Vulnerabilities:** $total_vulns" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             
-            echo "- **Critical**: $critical" >> $GITHUB_STEP_SUMMARY
-            echo "- **High**: $high" >> $GITHUB_STEP_SUMMARY
-            echo "- **Medium**: $medium" >> $GITHUB_STEP_SUMMARY
+            echo "- 🔴 **Critical**: $critical" >> $GITHUB_STEP_SUMMARY
+            echo "- 🟠 **High**: $high" >> $GITHUB_STEP_SUMMARY
+            echo "- 🟡 **Medium**: $medium" >> $GITHUB_STEP_SUMMARY
+            echo "- 🟢 **Low**: $low" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "**Vulnerabilities:**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| ID | Severity | Description |" >> $GITHUB_STEP_SUMMARY
-          echo "|----|----------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ID | Package | Severity | | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|----|---------|----------|-|-------------|" >> $GITHUB_STEP_SUMMARY
           
-          # Extract and format vulnerabilities into a table
-          jq -r '.vulnerabilities[] | "| \(.vulnerabilityId) | \(.severity) | \(.description | gsub("\n"; " ")) |"' "$SCAN_REPORT_PATH" >> $GITHUB_STEP_SUMMARY
-          
+          # Extract and format vulnerabilities into a table with colored severity indicators
+          jq -r '.vulnerabilities[] | "| \(.vulnerabilityId) | \(.packageName) | \(.severity) | \(if .severity == "CRITICAL" then "🔴" elif .severity == "HIGH" then "🟠" elif .severity == "MEDIUM" then "🟡" else "🟢" end) | \(.description | gsub("\n"; " ")) |"' "$SCAN_REPORT_PATH" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Scan results not found or scan failed**" >> $GITHUB_STEP_SUMMARY
