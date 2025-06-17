@@ -24,6 +24,44 @@ jobs:
           # Set any environment variables if needed
           DOCKER_CONTENT_TRUST: 1
       
+      - name: Generate Security Summary
+        if: always()
+        run: |
+          echo "## Container Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** supertokens/supertokens-postgresql:latest" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan Date:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if scan results exist and display them
+          if [ -f "anchore-reports/vulnerabilities.json" ]; then
+            echo "### Vulnerabilities Found" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Count vulnerabilities by severity
+            critical=$(jq '[.vulnerabilities[] | select(.severity == "Critical")] | length' anchore-reports/vulnerabilities.json 2>/dev/null || echo "0")
+            high=$(jq '[.vulnerabilities[] | select(.severity == "High")] | length' anchore-reports/vulnerabilities.json 2>/dev/null || echo "0")
+            medium=$(jq '[.vulnerabilities[] | select(.severity == "Medium")] | length' anchore-reports/vulnerabilities.json 2>/dev/null || echo "0")
+            low=$(jq '[.vulnerabilities[] | select(.severity == "Low")] | length' anchore-reports/vulnerabilities.json 2>/dev/null || echo "0")
+            
+            echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Critical | $critical |" >> $GITHUB_STEP_SUMMARY
+            echo "| High | $high |" >> $GITHUB_STEP_SUMMARY
+            echo "| Medium | $medium |" >> $GITHUB_STEP_SUMMARY
+            echo "| Low | $low |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # List critical and high vulnerabilities
+            if [ "$critical" -gt 0 ] || [ "$high" -gt 0 ]; then
+              echo "### Critical and High Severity CVEs" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              jq -r '.vulnerabilities[] | select(.severity == "Critical" or .severity == "High") | "- **\(.vuln)** (\(.severity)): \(.package) - \(.description // "No description available")"' anchore-reports/vulnerabilities.json 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "No critical or high severity vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ **Scan results not found or scan failed**" >> $GITHUB_STEP_SUMMARY
+          fi
+      
       - name: Upload scan results
         uses: actions/upload-artifact@v4
         if: always()
