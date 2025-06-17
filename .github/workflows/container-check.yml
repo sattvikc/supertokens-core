@@ -107,7 +107,7 @@ jobs:
           echo "|----|---------|----------|-|-------------|" >> $GITHUB_STEP_SUMMARY
           
           # Extract and format vulnerabilities into a table with colored severity indicators
-          jq -r '.vulnerabilities[] | "| \(.vulnerabilityId) | \(.packageName) | \(.severity) | \(if .severity == "CRITICAL" then "🔴" elif .severity == "HIGH" then "🟠" elif .severity == "MEDIUM" then "🟡" else "🟢" end) | \(.description | gsub("\n"; " ")) |"' "$SCAN_REPORT_PATH" >> $GITHUB_STEP_SUMMARY
+          jq -r '.vulnerabilities[]? | "| \(.vulnerabilityId // "N/A") | \(.packageName // "N/A") | \(.severity // "UNKNOWN") | \(if .severity == "CRITICAL" then "🔴" elif .severity == "HIGH" then "🟠" elif .severity == "MEDIUM" then "🟡" else "🟢" end) | \((.description // "No description available") | gsub("\n"; " ")) |"' "$SCAN_REPORT_PATH" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Scan results not found or scan failed**" >> $GITHUB_STEP_SUMMARY
