@@ -57,7 +57,6 @@ jobs:
             echo "| Critical | $critical |" >> $GITHUB_STEP_SUMMARY
             echo "| High | $high |" >> $GITHUB_STEP_SUMMARY
             echo "| Medium | $medium |" >> $GITHUB_STEP_SUMMARY
-            echo "| Low | $low |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             
             # List critical and high vulnerabilities with proper field names
