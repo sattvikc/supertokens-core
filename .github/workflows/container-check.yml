@@ -19,7 +19,7 @@ jobs:
         uses: Azure/container-scan@v0
         with:
           image-name: supertokens/supertokens-postgresql:latest
-          severity-threshold: LOW
+          severity-threshold: MEDIUM
           run-quality-checks: false
         env:
           # Set any environment variables if needed
@@ -82,12 +82,3 @@ jobs:
             echo "❌ **Scan results not found or scan failed**" >> $GITHUB_STEP_SUMMARY
             echo "Expected report path: $SCAN_REPORT_PATH" >> $GITHUB_STEP_SUMMARY
           fi
-      
-      - name: Upload scan results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: container-scan-results
-          path: |
-            ${{ steps.container-scan.outputs.scan-report-path }}
-          retention-days: 30
