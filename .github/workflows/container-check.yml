@@ -68,10 +68,10 @@ jobs:
 
           echo "\n" >> $GITHUB_OUTPUT
 
-          echo "[Download the full report](${{ steps.upload-scan-results.outputs.artifact_url }})" >> $GITHUB_OUTPUT
+          echo "[Download the full report](${{ steps.upload-scan-results.outputs.artifact-url }})\n" >> $GITHUB_OUTPUT
 
           echo "EOF" >> $GITHUB_OUTPUT
-      
+
       - name: Post notification on Slack channel
         id: deployment_message
         uses: slackapi/slack-github-action@v2.1.0
