@@ -83,7 +83,15 @@ jobs:
                   text: "${{ steps.container-scan.outcome == 'success' && '✅' || '❌' }} Vulnerability Report: ${{ steps.container-scan.outcome == 'success' && 'All okay' || 'Needs attention' }}"
               - type: "markdown"
                 text: "${{ steps.security-summary.outputs.summary }}"
-
+      - name: Comment
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ steps.deployment_message.outputs.ts }}"
+            text: "Detailed report"
       - name: Attach the report
         uses: slackapi/slack-github-action@v2.1.0
         with:
