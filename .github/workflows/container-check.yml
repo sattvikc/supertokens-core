@@ -24,7 +24,16 @@ jobs:
           run-quality-checks: false
         env:
           DOCKER_CONTENT_TRUST: 1
-      
+
+      - name: Upload scan results
+        id: upload-scan-results
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-scan-results
+          path: |
+            ${{ steps.container-scan.outputs.scan-report-path }}
+          retention-days: 30
+
       - name: Generate Security Summary
         id: security-summary
         run: |
@@ -57,16 +66,12 @@ jobs:
             echo "❌ **Scan results not found or scan failed**" >> $GITHUB_OUTPUT
           fi
 
+          echo "\n" >> $GITHUB_OUTPUT
+
+          echo "[Download the full report](${{ steps.upload-scan-results.outputs.artifact_url }})" >> $GITHUB_OUTPUT
+
           echo "EOF" >> $GITHUB_OUTPUT
       
-      - name: Upload scan results
-        uses: actions/upload-artifact@v4
-        with:
-          name: container-scan-results
-          path: |
-            ${{ steps.container-scan.outputs.scan-report-path }}
-          retention-days: 30
-
       - name: Post notification on Slack channel
         id: deployment_message
         uses: slackapi/slack-github-action@v2.1.0
@@ -83,23 +88,3 @@ jobs:
                   text: "${{ steps.container-scan.outcome == 'success' && '✅' || '❌' }} Vulnerability Report: ${{ steps.container-scan.outcome == 'success' && 'All okay' || 'Needs attention' }}"
               - type: "markdown"
                 text: "${{ steps.security-summary.outputs.summary }}"
-      - name: Comment
-        uses: slackapi/slack-github-action@v2.1.0
-        with:
-          method: chat.postMessage
-          token: ${{ secrets.SLACK_BOT_TOKEN }}
-          payload: |
-            channel: ${{ secrets.SLACK_CHANNEL_ID }}
-            thread_ts: "${{ steps.deployment_message.outputs.ts }}"
-            text: "Detailed report"
-      - name: Attach the report
-        uses: slackapi/slack-github-action@v2.1.0
-        with:
-          method: filesUploadV2
-          token: ${{ secrets.SLACK_BOT_TOKEN }}
-          payload: |
-            channel: ${{ secrets.SLACK_CHANNEL_ID }}
-            thread_ts: "${{ steps.deployment_message.outputs.ts }}"
-            initial_comment: "Container Scan Results"
-            file: ${{ steps.container-scan.outputs.scan-report-path }}
-            filename: "container-scan-results.json"
