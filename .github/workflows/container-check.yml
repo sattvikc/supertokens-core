@@ -19,7 +19,7 @@ jobs:
         uses: Azure/container-scan@v0
         with:
           image-name: supertokens/supertokens-postgresql:latest
-          severity-threshold: MEDIUM
+          severity-threshold: LOW
           run-quality-checks: false
         env:
           # Set any environment variables if needed
@@ -57,6 +57,7 @@ jobs:
             echo "| Critical | $critical |" >> $GITHUB_STEP_SUMMARY
             echo "| High | $high |" >> $GITHUB_STEP_SUMMARY
             echo "| Medium | $medium |" >> $GITHUB_STEP_SUMMARY
+            # echo "| Low | $low |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             
             # List critical and high vulnerabilities with proper field names
@@ -81,3 +82,12 @@ jobs:
             echo "❌ **Scan results not found or scan failed**" >> $GITHUB_STEP_SUMMARY
             echo "Expected report path: $SCAN_REPORT_PATH" >> $GITHUB_STEP_SUMMARY
           fi
+      
+      - name: Upload scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: container-scan-results
+          path: |
+            ${{ steps.container-scan.outputs.scan-report-path }}
+          retention-days: 30
