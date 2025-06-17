@@ -1,0 +1,38 @@
+name: Container Security Scan
+
+on:
+  # Allow manual triggering
+  workflow_dispatch:
+  
+  # Run automatically once a day at 2 AM UTC
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  container-scan:
+    name: Scan SuperTokens PostgreSQL Container
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Run Azure Container Scan
+        uses: Azure/container-scan@v0
+        with:
+          image-name: supertokens/supertokens-postgresql:latest
+          severity-threshold: MEDIUM
+          run-quality-checks: true
+        env:
+          # Set any environment variables if needed
+          DOCKER_CONTENT_TRUST: 1
+      
+      - name: Upload scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: container-scan-results
+          path: |
+            **/scan-report-*.json
+            **/vulnerability-report-*.json
+          retention-days: 30
